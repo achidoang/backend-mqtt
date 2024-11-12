@@ -8,7 +8,8 @@ const sequelize = new Sequelize(
   process.env.DB_PASS, // Password database
   {
     host: process.env.DB_HOST,
-    dialect: "mysql", // Sesuaikan dialect jika menggunakan SQL lain
+    dialect: "mysql",
+    timezone: "+07:00",
   }
 );
 

@@ -62,7 +62,7 @@ setInterval(async () => {
   } catch (error) {
     console.error("Error saving monitoring data to database:", error);
   }
-}, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
+}, 10 * 30 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
 
 // Fungsi untuk publish ke topik tertentu
 const publishToTopic = (topic, message) => {
