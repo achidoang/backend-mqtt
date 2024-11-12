@@ -1,14 +1,23 @@
 // src/models/Monitoring.js
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
 
-const MonitoringSchema = new mongoose.Schema({
-  watertemp: Number,
-  waterppm: Number,
-  waterph: Number,
-  airtemp: Number,
-  airhum: Number,
-  device: Number,
-  timestamp: { type: Date, default: Date.now },
+const Monitoring = sequelize.define("Monitoring", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  watertemp: DataTypes.FLOAT,
+  waterppm: DataTypes.FLOAT,
+  waterph: DataTypes.FLOAT,
+  airtemp: DataTypes.FLOAT,
+  airhum: DataTypes.FLOAT,
+  device: DataTypes.INTEGER,
+  timestamp: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
 });
 
-module.exports = mongoose.model("Monitoring", MonitoringSchema);
+module.exports = Monitoring;

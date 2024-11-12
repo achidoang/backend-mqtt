@@ -1,31 +1,40 @@
 // src/models/User.js
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
 
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    required: true,
-    enum: ["admin", "user"],
-    default: "user",
+const User = sequelize.define("User", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
   },
-  email: { type: String, required: true, unique: true },
+  fullname: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  username: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  gender: {
+    type: DataTypes.ENUM("Male", "Female"),
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  telephone: DataTypes.STRING,
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM("admin", "farmer"),
+    defaultValue: "farmer",
+  },
 });
 
-// Middleware untuk mengenkripsi password sebelum menyimpan
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// Method untuk membandingkan password saat login
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-module.exports = mongoose.model("User", userSchema);
+module.exports = User;

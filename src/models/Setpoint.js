@@ -1,14 +1,22 @@
 // src/models/Setpoint.js
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
 
-const SetpointSchema = new mongoose.Schema({
-  watertemp: Number,
-  waterppm: Number,
-  waterph: Number,
-  airtemp: Number,
-  airhum: Number,
-  profile: String,
-  timestamp: { type: Date, default: Date.now },
+const Setpoint = sequelize.define("Setpoint", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  watertemp: DataTypes.FLOAT,
+  waterppm: DataTypes.FLOAT,
+  waterph: DataTypes.FLOAT,
+  profile: DataTypes.STRING,
+  status: DataTypes.TINYINT,
+  timestamp: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
 });
 
-module.exports = mongoose.model("Setpoint", SetpointSchema);
+module.exports = Setpoint;

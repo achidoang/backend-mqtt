@@ -7,7 +7,9 @@ const { publishToTopic } = require("../services/mqttService");
 // Mendapatkan data Monitoring
 const getMonitoringData = async (req, res) => {
   try {
-    const data = await Monitoring.find().sort({ timestamp: -1 });
+    const data = await Monitoring.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -17,7 +19,9 @@ const getMonitoringData = async (req, res) => {
 // Mendapatkan data Aktuator
 const getAktuatorData = async (req, res) => {
   try {
-    const data = await Aktuator.find().sort({ timestamp: -1 });
+    const data = await Aktuator.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -27,7 +31,9 @@ const getAktuatorData = async (req, res) => {
 // Mendapatkan data Setpoint
 const getSetpointData = async (req, res) => {
   try {
-    const data = await Setpoint.find().sort({ timestamp: -1 });
+    const data = await Setpoint.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -44,7 +50,9 @@ const publishData = (req, res) => {
 // Mendapatkan data historis Monitoring
 const getMonitoringHistory = async (req, res) => {
   try {
-    const historyData = await Monitoring.find().sort({ timestamp: -1 }); // Mengurutkan data dari yang terbaru
+    const historyData = await Monitoring.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(historyData);
   } catch (error) {
     res
@@ -56,7 +64,9 @@ const getMonitoringHistory = async (req, res) => {
 // Mendapatkan data historis Aktuator
 const getAktuatorHistory = async (req, res) => {
   try {
-    const historyData = await Aktuator.find().sort({ timestamp: -1 });
+    const historyData = await Aktuator.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(historyData);
   } catch (error) {
     res
@@ -68,7 +78,9 @@ const getAktuatorHistory = async (req, res) => {
 // Mendapatkan data historis Setpoint
 const getSetpointHistory = async (req, res) => {
   try {
-    const historyData = await Setpoint.find().sort({ timestamp: -1 });
+    const historyData = await Setpoint.findAll({
+      order: [["timestamp", "DESC"]],
+    });
     res.status(200).json(historyData);
   } catch (error) {
     res

@@ -17,6 +17,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.1",
     "mqtt": "^5.10.1",
+    "mysql2": "^3.11.4",
+    "sequelize": "^6.37.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {

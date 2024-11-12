@@ -15,6 +15,10 @@ const registerUser = async (userData) => {
     throw new Error("Username already exists");
   }
 
+  // Hash password sebelum disimpan
+  const salt = await bcrypt.genSalt(10);
+  userData.password = await bcrypt.hash(userData.password, salt);
+
   // Buat user baru
   const newUser = await UserRepository.createUser(userData);
   return newUser;
@@ -27,14 +31,14 @@ const loginUser = async (username, password) => {
   }
 
   // Cek apakah password cocok
-  const isPasswordValid = await user.comparePassword(password);
+  const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw new Error("Invalid password");
   }
 
   // Buat token
   const token = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user.id, role: user.role },
     process.env.JWT_SECRET,
     {
       expiresIn: "1h",
