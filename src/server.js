@@ -7,6 +7,7 @@ const connectDB = require("./config/database");
 const mqttClient = require("./config/mqttClient");
 const app = require("./app");
 const sequelize = require("./config/sequelize");
+const { initializeWebSocket } = require("./services/mqttService"); // Import fungsi initializeWebSocket
 
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
@@ -35,8 +36,9 @@ mqttClient;
 // Buat HTTP server untuk WebSocket
 const server = http.createServer(app);
 
-// Inisialisasi WebSocket server
+// Inisialisasi WebSocket server sebelum Express menangani permintaan
 const wss = new WebSocketServer({ server });
+initializeWebSocket(wss); // Inisialisasi WebSocket di mqttService
 
 wss.on("connection", (ws) => {
   console.log("New WebSocket client connected");

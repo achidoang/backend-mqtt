@@ -3,8 +3,9 @@ const mqtt = require("mqtt");
 const Monitoring = require("../models/Monitoring");
 const Aktuator = require("../models/Aktuator");
 const Setpoint = require("../models/Setpoint");
-const { wss } = require("../server"); // Import WebSocket Server
+// const { wss } = require("../server"); // Import WebSocket Server
 
+let wss;
 const client = require("../config/mqttClient");
 
 // Variabel untuk menyimpan data sementara untuk topik herbalawu/monitoring
@@ -25,11 +26,15 @@ client.on("connect", () => {
 
 // Fungsi untuk broadcast data ke semua klien WebSocket yang terhubung
 const broadcastWebSocket = (data) => {
-  wss.clients.forEach((client) => {
-    if (client.readyState === client.OPEN) {
-      client.send(JSON.stringify(data));
-    }
-  });
+  if (wss && wss.clients) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify(data));
+      }
+    });
+  } else {
+    console.error("WebSocket server is not initialized");
+  }
 };
 
 // Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database
@@ -38,7 +43,6 @@ client.on("message", async (topic, message) => {
     const data = JSON.parse(message.toString());
 
     if (topic === "herbalawu/monitoring") {
-      // Kirim data monitoring ke WebSocket setiap kali ada pesan masuk
       broadcastWebSocket({ topic, data });
 
       // Simpan data ke buffer untuk disimpan ke database nanti (10 menit)
@@ -49,20 +53,23 @@ client.on("message", async (topic, message) => {
       await aktuatorData.save();
       console.log("Aktuator data saved:", aktuatorData);
 
-      // Broadcast data ke WebSocket
       broadcastWebSocket({ topic, data: aktuatorData });
     } else if (topic === "herbalawu/setpoint") {
       const setpointData = new Setpoint(data);
       await setpointData.save();
       console.log("Setpoint data saved:", setpointData);
 
-      // Broadcast data ke WebSocket
       broadcastWebSocket({ topic, data: setpointData });
     }
   } catch (error) {
     console.error("Error processing MQTT message:", error);
   }
 });
+
+// Fungsi untuk menginisialisasi WebSocket Server di mqttService
+const initializeWebSocket = (webSocketServer) => {
+  wss = webSocketServer;
+};
 
 // Fungsi untuk menyimpan data monitoring ke database setiap 10 menit
 setInterval(async () => {
@@ -91,4 +98,5 @@ const publishToTopic = (topic, message) => {
 
 module.exports = {
   publishToTopic,
+  initializeWebSocket,
 };
