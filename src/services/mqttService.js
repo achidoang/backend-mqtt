@@ -3,9 +3,10 @@ const mqtt = require("mqtt");
 const Monitoring = require("../models/Monitoring");
 const Aktuator = require("../models/Aktuator");
 const Setpoint = require("../models/Setpoint");
+const { wss } = require("../server"); // Import WebSocket Server
 
-// const client = mqtt.connect("mqtt://broker.emqx.io:1883");
 const client = require("../config/mqttClient");
+
 // Variabel untuk menyimpan data sementara untuk topik herbalawu/monitoring
 let monitoringDataBuffer = null;
 
@@ -22,28 +23,40 @@ client.on("connect", () => {
   );
 });
 
-// Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database sesuai kebutuhan
+// Fungsi untuk broadcast data ke semua klien WebSocket yang terhubung
+const broadcastWebSocket = (data) => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
+};
+
+// Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database
 client.on("message", async (topic, message) => {
   try {
     const data = JSON.parse(message.toString());
 
     if (topic === "herbalawu/monitoring") {
-      // Simpan data monitoring ke buffer dan tunggu interval 10 menit
       monitoringDataBuffer = data;
-      console.log(
-        "Monitoring data received and buffered:",
-        monitoringDataBuffer
-      );
+      console.log("Monitoring data buffered:", monitoringDataBuffer);
+
+      // Broadcast data ke WebSocket
+      broadcastWebSocket({ topic, data: monitoringDataBuffer });
     } else if (topic === "herbalawu/aktuator") {
-      // Simpan data aktuator setiap kali ada data baru
       const aktuatorData = new Aktuator(data);
       await aktuatorData.save();
       console.log("Aktuator data saved:", aktuatorData);
+
+      // Broadcast data ke WebSocket
+      broadcastWebSocket({ topic, data: aktuatorData });
     } else if (topic === "herbalawu/setpoint") {
-      // Simpan data setpoint setiap kali ada data baru
       const setpointData = new Setpoint(data);
       await setpointData.save();
       console.log("Setpoint data saved:", setpointData);
+
+      // Broadcast data ke WebSocket
+      broadcastWebSocket({ topic, data: setpointData });
     }
   } catch (error) {
     console.error("Error processing MQTT message:", error);
@@ -62,7 +75,7 @@ setInterval(async () => {
   } catch (error) {
     console.error("Error saving monitoring data to database:", error);
   }
-}, 10 * 30 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
+}, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
 
 // Fungsi untuk publish ke topik tertentu
 const publishToTopic = (topic, message) => {

@@ -1,10 +1,11 @@
 // src/server.js
 const express = require("express");
 const dotenv = require("dotenv");
+const http = require("http");
+const { WebSocketServer } = require("ws");
 const connectDB = require("./config/database");
 const mqttClient = require("./config/mqttClient");
 const app = require("./app");
-// src/server.js
 const sequelize = require("./config/sequelize");
 
 dotenv.config(); // Memuat variabel lingkungan dari file .env
@@ -31,6 +32,22 @@ connectDB();
 // Inisialisasi MQTT Client
 mqttClient;
 
+// Buat HTTP server untuk WebSocket
+const server = http.createServer(app);
+
+// Inisialisasi WebSocket server
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", (ws) => {
+  console.log("New WebSocket client connected");
+
+  ws.on("close", () => {
+    console.log("WebSocket client disconnected");
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+module.exports = { wss };
