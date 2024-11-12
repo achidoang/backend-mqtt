@@ -4,8 +4,8 @@ const Monitoring = require("../models/Monitoring");
 const Aktuator = require("../models/Aktuator");
 const Setpoint = require("../models/Setpoint");
 
-const client = mqtt.connect("mqtt://broker.emqx.io:1883");
-
+// const client = mqtt.connect("mqtt://broker.emqx.io:1883");
+const client = require("../config/mqttClient");
 // Variabel untuk menyimpan data sementara untuk topik herbalawu/monitoring
 let monitoringDataBuffer = null;
 

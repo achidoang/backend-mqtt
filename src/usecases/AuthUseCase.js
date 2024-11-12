@@ -8,11 +8,19 @@ dotenv.config();
 
 const registerUser = async (userData) => {
   // Cek apakah username sudah ada
-  const existingUser = await UserRepository.findUserByUsername(
+  const existingUserByUsername = await UserRepository.findUserByUsername(
     userData.username
   );
-  if (existingUser) {
+  if (existingUserByUsername) {
     throw new Error("Username already exists");
+  }
+
+  // Cek apakah email sudah ada
+  const existingUserByEmail = await UserRepository.findUserByEmail(
+    userData.email
+  );
+  if (existingUserByEmail) {
+    throw new Error("Email already exists");
   }
 
   // Hash password sebelum disimpan

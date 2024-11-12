@@ -42,8 +42,14 @@ const getSetpointData = async (req, res) => {
 
 // Publish data ke topik tertentu
 const publishData = (req, res) => {
-  const { topic, message } = req.body;
-  publishToTopic(topic, message);
+  const { topic, payload } = req.body;
+
+  if (!topic || !payload) {
+    return res.status(400).json({ message: "Topic and payload are required" });
+  }
+
+  // Kirim hanya `payload` ke topik yang ditentukan
+  publishToTopic(topic, payload);
   res.status(200).json({ message: `Data published to ${topic}` });
 };
 
