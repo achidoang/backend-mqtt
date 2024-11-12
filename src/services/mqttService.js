@@ -38,11 +38,12 @@ client.on("message", async (topic, message) => {
     const data = JSON.parse(message.toString());
 
     if (topic === "herbalawu/monitoring") {
+      // Kirim data monitoring ke WebSocket setiap kali ada pesan masuk
+      broadcastWebSocket({ topic, data });
+
+      // Simpan data ke buffer untuk disimpan ke database nanti (10 menit)
       monitoringDataBuffer = data;
       console.log("Monitoring data buffered:", monitoringDataBuffer);
-
-      // Broadcast data ke WebSocket
-      broadcastWebSocket({ topic, data: monitoringDataBuffer });
     } else if (topic === "herbalawu/aktuator") {
       const aktuatorData = new Aktuator(data);
       await aktuatorData.save();
