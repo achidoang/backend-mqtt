@@ -3,6 +3,7 @@ const Monitoring = require("../models/Monitoring");
 const Aktuator = require("../models/Aktuator");
 const Setpoint = require("../models/Setpoint");
 const { publishToTopic } = require("../services/mqttService");
+const { Op, fn, col, literal } = require("sequelize");
 
 // Mendapatkan data Monitoring
 const getMonitoringData = async (req, res) => {
@@ -95,6 +96,66 @@ const getSetpointHistory = async (req, res) => {
   }
 };
 
+// Fungsi untuk mengambil data rata-rata mingguan
+const getWeeklyMonitoringData = async (req, res) => {
+  try {
+    const order = req.query.order === "desc" ? "DESC" : "ASC";
+
+    const data = await Monitoring.findAll({
+      attributes: [
+        [fn("YEAR", col("timestamp")), "year"],
+        [fn("WEEK", col("timestamp")), "week"],
+        [fn("AVG", col("watertemp")), "avg_watertemp"],
+        [fn("AVG", col("waterppm")), "avg_waterppm"],
+        [fn("AVG", col("waterph")), "avg_waterph"],
+        [fn("AVG", col("airtemp")), "avg_airtemp"],
+        [fn("AVG", col("airhum")), "avg_airhum"],
+      ],
+      group: [literal("year"), literal("week")],
+      order: [
+        [literal("year"), order],
+        [literal("week"), order],
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching weekly monitoring data", error });
+  }
+};
+
+// Fungsi untuk mengambil data rata-rata bulanan
+const getMonthlyMonitoringData = async (req, res) => {
+  try {
+    const order = req.query.order === "desc" ? "DESC" : "ASC";
+
+    const data = await Monitoring.findAll({
+      attributes: [
+        [fn("YEAR", col("timestamp")), "year"],
+        [fn("MONTH", col("timestamp")), "month"],
+        [fn("AVG", col("watertemp")), "avg_watertemp"],
+        [fn("AVG", col("waterppm")), "avg_waterppm"],
+        [fn("AVG", col("waterph")), "avg_waterph"],
+        [fn("AVG", col("airtemp")), "avg_airtemp"],
+        [fn("AVG", col("airhum")), "avg_airhum"],
+      ],
+      group: [literal("year"), literal("month")],
+      order: [
+        [literal("year"), order],
+        [literal("month"), order],
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching monthly monitoring data", error });
+  }
+};
+
 module.exports = {
   getMonitoringData,
   getMonitoringHistory,
@@ -103,4 +164,6 @@ module.exports = {
   getSetpointData,
   getSetpointHistory,
   publishData,
+  getWeeklyMonitoringData,
+  getMonthlyMonitoringData,
 };

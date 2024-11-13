@@ -17,6 +17,18 @@ router.get("/setpoint", MqttController.getSetpointData);
 // Endpoint untuk mendapatkan data historis Monitoring
 router.get("/history/monitoring", MqttController.getMonitoringHistory);
 
+// Endpoint untuk mendapatkan data historis mingguan Monitoring
+router.get(
+  "/history/monitoring/weekly",
+  MqttController.getWeeklyMonitoringData
+);
+
+// Endpoint untuk mendapatkan data historis bulanan Monitoring
+router.get(
+  "/history/monitoring/monthly",
+  MqttController.getMonthlyMonitoringData
+);
+
 // Endpoint untuk mendapatkan data historis Aktuator
 router.get("/history/aktuator", MqttController.getAktuatorHistory);
 
