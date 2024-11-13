@@ -37,7 +37,18 @@ mqttClient;
 const server = http.createServer(app);
 
 // Inisialisasi WebSocket server pada port yang berbeda (untuk debugging)
-const wss = new WebSocketServer({ port: 4001 });
+const wss = new WebSocketServer({ noServer: true });
+
+server.on("upgrade", (request, socket, head) => {
+  // Hanya izinkan koneksi WebSocket pada path "/ws"
+  if (request.url === "/ws") {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
 
 initializeWebSocket(wss); // Inisialisasi WebSocket di mqttService
 
@@ -54,8 +65,7 @@ wss.on("connection", (ws) => {
   });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`WebSocket server running on ws://localhost:${PORT}/ws`);
 });
-
-// module.exports = { wss };
