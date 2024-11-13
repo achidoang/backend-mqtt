@@ -37,29 +37,21 @@ const broadcastWebSocket = (data) => {
   }
 };
 
-// Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database
+// Fungsi untuk menangani pesan yang diterima dari topik MQTT dan broadcast ke WebSocket
 client.on("message", async (topic, message) => {
   try {
     const data = JSON.parse(message.toString());
 
-    if (topic === "herbalawu/monitoring") {
+    // Broadcast ke WebSocket tanpa menyimpan ke database
+    if (
+      [
+        "herbalawu/monitoring",
+        "herbalawu/aktuator",
+        "herbalawu/setpoint",
+      ].includes(topic)
+    ) {
       broadcastWebSocket({ topic, data });
-
-      // Simpan data ke buffer untuk disimpan ke database nanti (10 menit)
-      monitoringDataBuffer = data;
-      console.log("Monitoring data buffered:", monitoringDataBuffer);
-    } else if (topic === "herbalawu/aktuator") {
-      const aktuatorData = new Aktuator(data);
-      await aktuatorData.save();
-      console.log("Aktuator data saved:", aktuatorData);
-
-      broadcastWebSocket({ topic, data: aktuatorData });
-    } else if (topic === "herbalawu/setpoint") {
-      const setpointData = new Setpoint(data);
-      await setpointData.save();
-      console.log("Setpoint data saved:", setpointData);
-
-      broadcastWebSocket({ topic, data: setpointData });
+      console.log(`Data broadcasted for topic ${topic}:`, data);
     }
   } catch (error) {
     console.error("Error processing MQTT message:", error);
@@ -71,19 +63,19 @@ const initializeWebSocket = (webSocketServer) => {
   wss = webSocketServer;
 };
 
-// Fungsi untuk menyimpan data monitoring ke database setiap 10 menit
-setInterval(async () => {
-  try {
-    if (monitoringDataBuffer) {
-      const monitoringData = new Monitoring(monitoringDataBuffer);
-      await monitoringData.save();
-      console.log("Monitoring data saved:", monitoringData);
-      monitoringDataBuffer = null; // Reset buffer setelah data disimpan
-    }
-  } catch (error) {
-    console.error("Error saving monitoring data to database:", error);
-  }
-}, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
+// // Fungsi untuk menyimpan data monitoring ke database setiap 10 menit
+// setInterval(async () => {
+//   try {
+//     if (monitoringDataBuffer) {
+//       const monitoringData = new Monitoring(monitoringDataBuffer);
+//       await monitoringData.save();
+//       console.log("Monitoring data saved:", monitoringData);
+//       monitoringDataBuffer = null; // Reset buffer setelah data disimpan
+//     }
+//   } catch (error) {
+//     console.error("Error saving monitoring data to database:", error);
+//   }
+// }, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
 
 // Fungsi untuk publish ke topik tertentu
 const publishToTopic = (topic, message) => {
