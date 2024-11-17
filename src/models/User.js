@@ -39,7 +39,7 @@ const User = sequelize.define(
     },
   },
   {
-    tableName: "user",
+    tableName: "users",
     timestamps: false, // Menonaktifkan createdAt dan updatedAt
   }
 );
