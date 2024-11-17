@@ -19,6 +19,7 @@ const Guide = sequelize.define(
     },
   },
   {
+    tableName: "guide",
     timestamps: false, // Tidak perlu createdAt dan updatedAt
   }
 );
