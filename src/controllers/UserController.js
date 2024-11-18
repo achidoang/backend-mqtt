@@ -1,10 +1,21 @@
 // src/controllers/UserController.js
 const User = require("../models/User");
 
-// Mendapatkan semua user (hanya admin)
-const getAllUsers = async (req, res) => {
+// Mendapatkan semua user atau data user sendiri
+const getUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    let users;
+
+    if (req.user.role === "admin") {
+      // Jika admin, ambil semua user
+      users = await User.findAll();
+    } else {
+      // Jika bukan admin, hanya ambil data diri sendiri
+      users = await User.findAll({
+        where: { id: req.user.id },
+      });
+    }
+
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });

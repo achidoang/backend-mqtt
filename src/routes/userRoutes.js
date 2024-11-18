@@ -8,8 +8,8 @@ const {
 
 const router = express.Router();
 
-// Mendapatkan semua user (hanya untuk admin)
-router.get("/", verifyToken, adminMiddleware, UserController.getAllUsers);
+// Mendapatkan user (data diri sendiri atau semua data jika admin)
+router.get("/", verifyToken, UserController.getUsers);
 
 // Mendapatkan user berdasarkan ID
 router.get("/:id", verifyToken, UserController.getUserById);
