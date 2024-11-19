@@ -18,6 +18,6 @@ router.get("/:id", verifyToken, UserController.getUserById);
 router.put("/:id", verifyToken, adminMiddleware, UserController.updateUser);
 
 // Menghapus user berdasarkan ID (hanya untuk admin)
-router.delete("/:id", adminMiddleware, verifyToken, UserController.deleteUser);
+router.delete("/:id", verifyToken, adminMiddleware, UserController.deleteUser);
 
 module.exports = router;
