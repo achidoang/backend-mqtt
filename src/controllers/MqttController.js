@@ -156,6 +156,38 @@ const getMonthlyMonitoringData = async (req, res) => {
   }
 };
 
+// Fungsi untuk mengambil data rata-rata harian
+const getDailyMonitoringData = async (req, res) => {
+  try {
+    const order = req.query.order === "desc" ? "DESC" : "ASC";
+
+    const data = await Monitoring.findAll({
+      attributes: [
+        [fn("YEAR", col("timestamp")), "year"],
+        [fn("MONTH", col("timestamp")), "month"],
+        [fn("DAY", col("timestamp")), "day"],
+        [fn("AVG", col("watertemp")), "avg_watertemp"],
+        [fn("AVG", col("waterppm")), "avg_waterppm"],
+        [fn("AVG", col("waterph")), "avg_waterph"],
+        [fn("AVG", col("airtemp")), "avg_airtemp"],
+        [fn("AVG", col("airhum")), "avg_airhum"],
+      ],
+      group: [literal("year"), literal("month"), literal("day")],
+      order: [
+        [literal("year"), order],
+        [literal("month"), order],
+        [literal("day"), order],
+      ],
+    });
+
+    res.status(200).json(data);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching daily monitoring data", error });
+  }
+};
+
 module.exports = {
   getMonitoringData,
   getMonitoringHistory,
@@ -166,4 +198,5 @@ module.exports = {
   publishData,
   getWeeklyMonitoringData,
   getMonthlyMonitoringData,
+  getDailyMonitoringData,
 };

@@ -36,6 +36,12 @@ router.get(
   MqttController.getMonthlyMonitoringData
 );
 
+router.get(
+  "/history/monitoring/daily",
+  verifyToken,
+  MqttController.getDailyMonitoringData
+);
+
 // Endpoint untuk mendapatkan data historis Aktuator
 router.get("/history/aktuator", verifyToken, MqttController.getAktuatorHistory);
 
