@@ -51,4 +51,11 @@ router.get("/history/setpoint", verifyToken, MqttController.getSetpointHistory);
 // Endpoint untuk publish data ke MQTT
 router.post("/publish", verifyToken, MqttController.publishData);
 
+// Endpoint untuk mendapatkan data historis Monitoring dengan pagination, filter tanggal, dan sorting
+router.get(
+  "/history/monitoring/paginated",
+  verifyToken,
+  MqttController.getMonitoringHistoryPaginated
+);
+
 module.exports = router;

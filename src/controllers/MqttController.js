@@ -188,6 +188,77 @@ const getDailyMonitoringData = async (req, res) => {
   }
 };
 
+// Mendapatkan data historis Monitoring dengan pagination, sorting, dan filter tanggal
+const getMonitoringHistoryPaginated = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      startDate,
+      endDate,
+      sortBy = "timestamp",
+      order = "DESC",
+      maxLimit = 200,
+    } = req.query;
+
+    if (parseInt(limit) > maxLimit) {
+      return res
+        .status(400)
+        .json({ message: `Limit cannot exceed ${maxLimit}.` });
+    }
+
+    // Validasi page dan limit
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Page and limit must be positive integers." });
+    }
+
+    const offset = (page - 1) * limit;
+
+    // Query filter tanggal jika diberikan
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter[Op.gte] = new Date(startDate);
+    }
+    if (endDate) {
+      dateFilter[Op.lte] = new Date(endDate);
+    }
+
+    const whereClause =
+      Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {};
+
+    // Query dengan filter, sorting, pagination
+    const { count, rows } = await Monitoring.findAndCountAll({
+      where: whereClause,
+      order: [[sortBy, order.toUpperCase()]], // Sorting berdasarkan kolom
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    // Jika page melebihi totalPages
+    if (page > totalPages && totalPages > 0) {
+      return res
+        .status(404)
+        .json({ message: "Page exceeds total available pages." });
+    }
+
+    res.status(200).json({
+      data: rows,
+      currentPage: parseInt(page),
+      totalPages,
+      totalItems: count,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching paginated monitoring history data",
+      error,
+    });
+  }
+};
+
 module.exports = {
   getMonitoringData,
   getMonitoringHistory,
@@ -199,4 +270,5 @@ module.exports = {
   getWeeklyMonitoringData,
   getMonthlyMonitoringData,
   getDailyMonitoringData,
+  getMonitoringHistoryPaginated,
 };
