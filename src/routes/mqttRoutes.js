@@ -46,7 +46,7 @@ router.get(
 router.get("/history/aktuator", verifyToken, MqttController.getAktuatorHistory);
 
 // Endpoint untuk mendapatkan data historis Setpoint
-router.get("/history/setpoint", verifyToken, MqttController.getSetpointHistory);
+router.get("/history/setpoint", MqttController.getSetpointHistory);
 
 // Endpoint untuk publish data ke MQTT
 router.post("/publish", verifyToken, MqttController.publishData);
