@@ -1,3 +1,4 @@
+// ProfileRepository.js
 const Profile = require("../models/Profile");
 
 class ProfileRepository {

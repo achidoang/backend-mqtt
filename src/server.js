@@ -8,6 +8,7 @@ const mqttClient = require("./config/mqttClient");
 const app = require("./app");
 const sequelize = require("./config/sequelize");
 const { initializeWebSocket } = require("./services/mqttService");
+const { initializeWebSocketProfile } = require("./services/webSocketService");
 
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
@@ -40,8 +41,11 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", (request, socket, head) => {
-  // Hanya izinkan koneksi WebSocket pada path "/ws"
   if (request.url === "/ws") {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  } else if (request.url === "/profile") {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit("connection", ws, request);
     });
@@ -49,6 +53,9 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
   }
 });
+
+// Inisialisasi WebSocket untuk path /ws/profile
+initializeWebSocketProfile(wss);
 
 initializeWebSocket(wss); // Inisialisasi WebSocket di mqttService
 

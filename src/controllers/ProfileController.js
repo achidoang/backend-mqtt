@@ -1,5 +1,8 @@
+// ProfileController
 const ProfileRepository = require("../repositories/ProfileRepository");
 const mqttService = require("../services/mqttService"); // Ganti dengan path yang benar
+
+const { broadcastProfileUpdate } = require("../services/webSocketService");
 
 class ProfileController {
   static async getAllProfiles(req, res) {
@@ -88,15 +91,23 @@ class ProfileController {
       };
 
       // Publish pesan ke topik MQTT
-      mqttService.publishToTopic(
-        "herbalawu/setpoint",
-        JSON.stringify(mqttPayload)
-      );
+      if (typeof mqttPayload === "object") {
+        mqttService.publishToTopic("herbalawu/setpoint", mqttPayload);
+      }
+
+      // **Ambil seluruh profil setelah perubahan**
+      const allProfiles = await ProfileRepository.getAllProfiles();
+
+      // **Broadcast seluruh profil melalui WebSocket**
+      broadcastProfileUpdate({
+        type: "PROFILE_UPDATE",
+        data: allProfiles, // Kirim seluruh profil
+      });
 
       // Kirim respon sukses
       return res.status(200).json({
         message: "Profile activated and MQTT message published successfully",
-        profile: updatedProfile,
+        profiles: allProfiles,
       });
     } catch (error) {
       console.error("Error activating profile:", error);
