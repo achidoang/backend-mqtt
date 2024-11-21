@@ -9,5 +9,5 @@ const router = express.Router();
 router.get("/hidroponik", verifyToken, GuideController.getGuide);
 
 // Endpoint untuk menambahkan panduan baru
-router.post("/guides", verifyToken, GuideController.createGuide);
+router.post("/add", verifyToken, GuideController.createGuide);
 module.exports = router;
