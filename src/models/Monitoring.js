@@ -15,7 +15,7 @@ const Monitoring = sequelize.define(
     waterph: DataTypes.FLOAT,
     airtemp: DataTypes.FLOAT,
     airhum: DataTypes.FLOAT,
-    device: DataTypes.INTEGER,
+    // device: DataTypes.INTEGER,
     timestamp: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
