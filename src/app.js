@@ -6,6 +6,8 @@ const userRoutes = require("./routes/userRoutes");
 const mqttRoutes = require("./routes/mqttRoutes");
 const guideRoutes = require("./routes/guideRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const locationRoutes = require("./routes/locationRoutes");
+const weatherRoutes = require("./routes/weatherRoutes");
 
 require("./config/database");
 
@@ -34,4 +36,7 @@ app.use("/api/v2/users", userRoutes);
 app.use("/api/v2/mqtt", mqttRoutes);
 app.use("/api/v2/guides", guideRoutes);
 app.use("/api/v2/profiles", profileRoutes);
+app.use("/api/v2/location", locationRoutes);
+app.use("/api/v2/weather", weatherRoutes);
+
 module.exports = app;
