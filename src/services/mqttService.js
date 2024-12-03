@@ -15,7 +15,12 @@ let monitoringDataBuffer = null;
 client.on("connect", () => {
   console.log("Connected to MQTT broker");
   client.subscribe(
-    ["herbalawu/monitoring", "herbalawu/aktuator", "herbalawu/setpoint"],
+    [
+      "herbalawu/monitoring",
+      "herbalawu/aktuator",
+      "herbalawu/setpoint",
+      "herbalawu/mode",
+    ],
     (err) => {
       if (err) {
         console.error("Error subscribing to topics:", err);
@@ -42,23 +47,30 @@ client.on("message", async (topic, message) => {
   try {
     const data = JSON.parse(message.toString());
 
-    if (topic === "herbalawu/monitoring") {
-      broadcastWebSocket({ topic, data });
+    if (topic === "herbalawu/mode") {
+      // Validasi format JSON
+      if (data && typeof data.automode === "number") {
+        console.log("Received valid mode data:", data);
 
-      // Simpan data ke buffer untuk disimpan ke database nanti (10 menit)
+        // Broadcast ke WebSocket
+        broadcastWebSocket({ topic, data });
+      } else {
+        console.warn("Invalid JSON format for mode topic:", message.toString());
+      }
+    } else if (topic === "herbalawu/monitoring") {
+      // Existing logic untuk topik monitoring
+      broadcastWebSocket({ topic, data });
       monitoringDataBuffer = data;
       console.log("Monitoring data buffered:", monitoringDataBuffer);
     } else if (topic === "herbalawu/aktuator") {
       const aktuatorData = new Aktuator(data);
       await aktuatorData.save();
       console.log("Aktuator data saved:", aktuatorData);
-
       broadcastWebSocket({ topic, data: aktuatorData });
     } else if (topic === "herbalawu/setpoint") {
       const setpointData = new Setpoint(data);
       await setpointData.save();
       console.log("Setpoint data saved:", setpointData);
-
       broadcastWebSocket({ topic, data: setpointData });
     }
   } catch (error) {
