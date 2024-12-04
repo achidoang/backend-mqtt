@@ -29,23 +29,45 @@ const createGuide = async (req, res) => {
   }
 };
 
-const getGuide = async (req, res) => {
+// Fungsi untuk mendapatkan panduan berdasarkan query atau semua panduan
+const getGuides = async (req, res) => {
   try {
-    const guide = await Guide.findOne({
-      where: { title: "Panduan Menanam Hidroponik" },
-    });
+    const { title } = req.query;
 
+    // Jika ada query title, cari berdasarkan title
+    const guides = title
+      ? await Guide.findAll({ where: { title } })
+      : await Guide.findAll();
+
+    if (guides.length === 0) {
+      return res.status(404).json({ message: "No guides found" });
+    }
+
+    res.status(200).json(guides);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving guides", error });
+  }
+};
+
+// Fungsi untuk menghapus panduan berdasarkan ID
+const deleteGuide = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const guide = await Guide.findByPk(id);
     if (!guide) {
       return res.status(404).json({ message: "Guide not found" });
     }
 
-    res.status(200).json(guide);
+    await guide.destroy();
+    res.status(200).json({ message: "Guide deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving guide", error });
+    res.status(500).json({ message: "Error deleting guide", error });
   }
 };
 
 module.exports = {
-  getGuide,
   createGuide,
+  getGuides,
+  deleteGuide,
 };
