@@ -231,12 +231,17 @@ const getMonitoringHistoryPaginated = async (req, res) => {
 
     console.log("Date Filter:", dateFilter); // Tambahkan log ini
 
-    const whereClause =
-      Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {};
+    // const whereClause =
+    //   Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {};
 
+    const whereClause = {
+      ...dateFilter, // Gabungkan dateFilter langsung ke whereClause
+    };
+
+    // Query dengan filter, sorting, pagination
     const { count, rows } = await Monitoring.findAndCountAll({
-      where: whereClause,
-      order: [[sortBy, order.toUpperCase()]], // Sorting
+      where: whereClause, // Pastikan whereClause diterapkan di sini
+      order: [[sortBy, order.toUpperCase()]], // Sorting berdasarkan kolom
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
