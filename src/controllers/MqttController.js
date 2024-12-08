@@ -201,8 +201,8 @@ const getMonitoringHistoryPaginated = async (req, res) => {
       maxLimit = 200,
     } = req.query;
 
-    console.log("Start Date:", startDate); // Tambahkan log ini
-    console.log("End Date:", endDate); // Tambahkan log ini
+    console.log("Start Date:", startDate);
+    console.log("End Date:", endDate);
 
     // Validasi limit
     if (parseInt(limit) > maxLimit) {
@@ -229,14 +229,12 @@ const getMonitoringHistoryPaginated = async (req, res) => {
       dateFilter[Op.lte] = new Date(endDate);
     }
 
-    console.log("Date Filter:", dateFilter); // Tambahkan log ini
+    console.log("Date Filter:", dateFilter);
 
-    // const whereClause =
-    //   Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {};
-
-    const whereClause = {
-      ...dateFilter, // Gabungkan dateFilter langsung ke whereClause
-    };
+    const whereClause =
+      Object.keys(dateFilter).length > 0
+        ? { timestamp: dateFilter } // Terapkan dateFilter hanya ke kolom "timestamp"
+        : {};
 
     // Query dengan filter, sorting, pagination
     const { count, rows } = await Monitoring.findAndCountAll({
@@ -255,6 +253,7 @@ const getMonitoringHistoryPaginated = async (req, res) => {
       totalItems: count,
     });
   } catch (error) {
+    console.error("Error in getMonitoringHistoryPaginated:", error);
     res.status(500).json({
       message: "Error fetching paginated monitoring history data",
       error,
