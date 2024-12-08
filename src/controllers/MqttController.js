@@ -201,6 +201,10 @@ const getMonitoringHistoryPaginated = async (req, res) => {
       maxLimit = 200,
     } = req.query;
 
+    console.log("Start Date:", startDate); // Tambahkan log ini
+    console.log("End Date:", endDate); // Tambahkan log ini
+
+    // Validasi limit
     if (parseInt(limit) > maxLimit) {
       return res
         .status(400)
@@ -216,7 +220,7 @@ const getMonitoringHistoryPaginated = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    // Query filter tanggal jika diberikan
+    // Query filter tanggal
     const dateFilter = {};
     if (startDate) {
       dateFilter[Op.gte] = new Date(startDate);
@@ -225,25 +229,19 @@ const getMonitoringHistoryPaginated = async (req, res) => {
       dateFilter[Op.lte] = new Date(endDate);
     }
 
+    console.log("Date Filter:", dateFilter); // Tambahkan log ini
+
     const whereClause =
       Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {};
 
-    // Query dengan filter, sorting, pagination
     const { count, rows } = await Monitoring.findAndCountAll({
       where: whereClause,
-      order: [[sortBy, order.toUpperCase()]], // Sorting berdasarkan kolom
+      order: [[sortBy, order.toUpperCase()]], // Sorting
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
 
     const totalPages = Math.ceil(count / limit);
-
-    // Jika page melebihi totalPages
-    if (page > totalPages && totalPages > 0) {
-      return res
-        .status(404)
-        .json({ message: "Page exceeds total available pages." });
-    }
 
     res.status(200).json({
       data: rows,
