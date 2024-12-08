@@ -223,23 +223,24 @@ const getMonitoringHistoryPaginated = async (req, res) => {
     // Query filter tanggal
     const dateFilter = {};
     if (startDate) {
-      dateFilter[Op.gte] = new Date(startDate);
+      dateFilter[Op.gte] = new Date(startDate); // Gunakan Op.gte untuk startDate
     }
     if (endDate) {
-      dateFilter[Op.lte] = new Date(endDate);
+      dateFilter[Op.lte] = new Date(endDate); // Gunakan Op.lte untuk endDate
     }
 
     console.log("Date Filter:", dateFilter);
 
+    // Pastikan whereClause menggunakan timestamp
     const whereClause =
-      Object.keys(dateFilter).length > 0
-        ? { timestamp: dateFilter } // Terapkan dateFilter hanya ke kolom "timestamp"
-        : {};
+      dateFilter[Op.gte] || dateFilter[Op.lte] ? { timestamp: dateFilter } : {};
+
+    console.log("Final whereClause:", whereClause);
 
     // Query dengan filter, sorting, pagination
     const { count, rows } = await Monitoring.findAndCountAll({
-      where: whereClause, // Pastikan whereClause diterapkan di sini
-      order: [[sortBy, order.toUpperCase()]], // Sorting berdasarkan kolom
+      where: whereClause, // Pastikan filter diterapkan di sini
+      order: [[sortBy, order.toUpperCase()]],
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
