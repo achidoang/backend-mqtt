@@ -17,7 +17,7 @@ client.on("connect", () => {
   client.subscribe(
     [
       "herbalawu/monitoring",
-      "herbalawu/aktuator",
+      "herbalawu/state",
       "herbalawu/setpoint",
       "herbalawu/mode",
     ],
@@ -62,7 +62,7 @@ client.on("message", async (topic, message) => {
       broadcastWebSocket({ topic, data });
       monitoringDataBuffer = data;
       console.log("Monitoring data buffered:", monitoringDataBuffer);
-    } else if (topic === "herbalawu/aktuator") {
+    } else if (topic === "herbalawu/state") {
       const aktuatorData = new Aktuator(data);
       await aktuatorData.save();
       console.log("Aktuator data saved:", aktuatorData);
