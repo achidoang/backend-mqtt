@@ -59,9 +59,11 @@ client.on("message", async (topic, message) => {
         const parsedAirtemp = parseFloat(airtemp);
         const parsedAirhum = parseFloat(airhum);
 
-        // Validasi timestamp
-        const timestampString = `${date} ${hours}`;
+        // Format timestamp menjadi YYYY-MM-DDTHH:mm:ss
+        const [day, month, year] = date.split("-"); // Mengambil bagian tanggal dari format DD-MM-YYYY
+        const timestampString = `${year}-${month}-${day}T${hours}`; // Format menjadi YYYY-MM-DDTHH:mm:ss
         const timestamp = new Date(timestampString);
+
         if (isNaN(timestamp.getTime())) {
           throw new Error(`Invalid timestamp: ${timestampString}`);
         }
