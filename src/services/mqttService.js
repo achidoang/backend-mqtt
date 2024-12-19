@@ -84,7 +84,18 @@ client.on("message", async (topic, message) => {
           waterph: parsedWaterph,
           airtemp: parsedAirtemp,
           airhum: parsedAirhum,
-          timestamp,
+          timestamp:
+            timestamp.getFullYear() +
+            "-" +
+            ("0" + (timestamp.getMonth() + 1)).slice(-2) +
+            "-" +
+            ("0" + timestamp.getDate()).slice(-2) +
+            " " +
+            ("0" + timestamp.getHours()).slice(-2) +
+            ":" +
+            ("0" + timestamp.getMinutes()).slice(-2) +
+            ":" +
+            ("0" + timestamp.getSeconds()).slice(-2), // Format timestamp
         });
 
         console.log("Delay log data saved:", delayLogData);
@@ -112,7 +123,10 @@ client.on("message", async (topic, message) => {
           );
         }
       } else if (topic === "herbalawu/monitoring") {
-        // Existing logic untuk topik monitoring
+        data.timestamp = data.timestamp || new Date(); // Menggunakan current_timestamp() jika timestamp kosong
+        const monitoringData = new Monitoring(data);
+        await monitoringData.save();
+        console.log("Monitoring data saved:", monitoringData);
         broadcastWebSocket({ topic, data });
         monitoringDataBuffer = data;
         console.log("Monitoring data buffered:", monitoringDataBuffer);
