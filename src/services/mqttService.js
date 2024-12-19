@@ -30,6 +30,19 @@ client.on("connect", () => {
   );
 });
 
+// Fungsi untuk broadcast data ke semua klien WebSocket yang terhubung
+const broadcastWebSocket = (data) => {
+  if (wss && wss.clients) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify(data));
+      }
+    });
+  } else {
+    console.error("WebSocket server is not initialized");
+  }
+};
+
 client.on("message", async (topic, message) => {
   try {
     if (topic === "herbalawu/delaylog") {
