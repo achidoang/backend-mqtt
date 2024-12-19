@@ -46,57 +46,42 @@ const broadcastWebSocket = (data) => {
 client.on("message", async (topic, message) => {
   try {
     if (topic === "herbalawu/delaylog") {
-      // Parsing data dari format string
-      const dataString = message.toString();
-      const [watertemp, waterppm, waterph, airtemp, airhum, hours, date] =
-        dataString.split(",").map((item) => item.trim());
+      // Parsing CSV data
+      const csvData = message.toString().split(",");
+      if (csvData.length === 7) {
+        const [watertemp, waterppm, waterph, airtemp, airhum, hours, date] =
+          csvData.map((val) => val.trim());
+        const timestamp = new Date(`${date} ${hours}`);
 
-      // Validasi format data
-      if (
-        watertemp &&
-        waterppm &&
-        waterph &&
-        airtemp &&
-        airhum &&
-        hours &&
-        date
-      ) {
-        console.log("Received delaylog data:", dataString);
-
-        // Broadcast ke WebSocket
-        broadcastWebSocket({
-          topic,
-          data: { watertemp, waterppm, waterph, airtemp, airhum, hours, date },
-        });
-
-        // Mengonversi jam dan tanggal menjadi format Date
-        const [day, month, year] = date
-          .split("-")
-          .map((item) => parseInt(item, 10));
-        const [hour, minute, second] = hours
-          .split(":")
-          .map((item) => parseInt(item, 10));
-        const timestamp = new Date(year, month - 1, day, hour, minute, second);
-
-        // Menyimpan data ke tabel monitoring
-        const monitoringData = new Monitoring({
+        // Menyimpan ke database
+        const delayLogData = await Monitoring.create({
           watertemp: parseFloat(watertemp),
           waterppm: parseFloat(waterppm),
           waterph: parseFloat(waterph),
           airtemp: parseFloat(airtemp),
           airhum: parseFloat(airhum),
-          timestamp, // Timestamp yang sudah di-generate
+          timestamp,
         });
 
-        await monitoringData.save();
-        console.log("Delaylog data saved to monitoring table:", monitoringData);
+        console.log("Delay log data saved:", delayLogData);
+
+        // Broadcast ke WebSocket
+        broadcastWebSocket({ topic, data: delayLogData });
       } else {
-        console.warn("Invalid delaylog data format:", message.toString());
+        console.warn("Invalid delaylog format:", message.toString());
       }
     }
+  } catch (error) {
+    console.error("Error processing MQTT message:", error);
+  }
+});
 
-    // Logika untuk topik lainnya tetap sama
-    else if (topic === "herbalawu/mode") {
+// Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database
+client.on("message", async (topic, message) => {
+  try {
+    const data = JSON.parse(message.toString());
+
+    if (topic === "herbalawu/mode") {
       // Validasi format JSON
       if (data && typeof data.automode === "number") {
         console.log("Received valid mode data:", data);
@@ -126,42 +111,6 @@ client.on("message", async (topic, message) => {
     console.error("Error processing MQTT message:", error);
   }
 });
-
-// // Fungsi untuk menangani pesan yang diterima dan menyimpan data ke database
-// client.on("message", async (topic, message) => {
-//   try {
-//     const data = JSON.parse(message.toString());
-
-//     if (topic === "herbalawu/mode") {
-//       // Validasi format JSON
-//       if (data && typeof data.automode === "number") {
-//         console.log("Received valid mode data:", data);
-
-//         // Broadcast ke WebSocket
-//         broadcastWebSocket({ topic, data });
-//       } else {
-//         console.warn("Invalid JSON format for mode topic:", message.toString());
-//       }
-//     } else if (topic === "herbalawu/monitoring") {
-//       // Existing logic untuk topik monitoring
-//       broadcastWebSocket({ topic, data });
-//       monitoringDataBuffer = data;
-//       console.log("Monitoring data buffered:", monitoringDataBuffer);
-//     } else if (topic === "herbalawu/state") {
-//       const aktuatorData = new Aktuator(data);
-//       await aktuatorData.save();
-//       console.log("Aktuator data saved:", aktuatorData);
-//       broadcastWebSocket({ topic, data: aktuatorData });
-//     } else if (topic === "herbalawu/setpoint") {
-//       const setpointData = new Setpoint(data);
-//       await setpointData.save();
-//       console.log("Setpoint data saved:", setpointData);
-//       broadcastWebSocket({ topic, data: setpointData });
-//     }
-//   } catch (error) {
-//     console.error("Error processing MQTT message:", error);
-//   }
-// });
 
 // Fungsi untuk menginisialisasi WebSocket Server di mqttService
 const initializeWebSocket = (webSocketServer) => {
