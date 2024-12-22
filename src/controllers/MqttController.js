@@ -96,6 +96,54 @@ const getSetpointHistory = async (req, res) => {
   }
 };
 
+// Fungsi untuk membulatkan rata-rata ke dua angka di belakang koma
+const roundToTwoDecimals = (data) => {
+  return data.map((item) => ({
+    ...item,
+    avg_watertemp: parseFloat(item.avg_watertemp).toFixed(2),
+    avg_waterppm: parseFloat(item.avg_waterppm).toFixed(2),
+    avg_waterph: parseFloat(item.avg_waterph).toFixed(2),
+    avg_airtemp: parseFloat(item.avg_airtemp).toFixed(2),
+    avg_airhum: parseFloat(item.avg_airhum).toFixed(2),
+  }));
+};
+
+// Fungsi untuk mengambil data rata-rata harian
+const getDailyMonitoringData = async (req, res) => {
+  try {
+    const order = req.query.order === "desc" ? "DESC" : "ASC";
+
+    const data = await Monitoring.findAll({
+      attributes: [
+        [fn("YEAR", col("timestamp")), "year"],
+        [fn("MONTH", col("timestamp")), "month"],
+        [fn("DAY", col("timestamp")), "day"],
+        [fn("AVG", col("watertemp")), "avg_watertemp"],
+        [fn("AVG", col("waterppm")), "avg_waterppm"],
+        [fn("AVG", col("waterph")), "avg_waterph"],
+        [fn("AVG", col("airtemp")), "avg_airtemp"],
+        [fn("AVG", col("airhum")), "avg_airhum"],
+      ],
+      group: [literal("year"), literal("month"), literal("day")],
+      order: [
+        [literal("year"), order],
+        [literal("month"), order],
+        [literal("day"), order],
+      ],
+      raw: true, // Mengembalikan data sebagai objek JSON murni
+    });
+
+    // Membulatkan rata-rata ke dua angka di belakang koma
+    const roundedData = roundToTwoDecimals(data);
+
+    res.status(200).json(roundedData);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching daily monitoring data", error });
+  }
+};
+
 // Fungsi untuk mengambil data rata-rata mingguan
 const getWeeklyMonitoringData = async (req, res) => {
   try {
@@ -116,9 +164,12 @@ const getWeeklyMonitoringData = async (req, res) => {
         [literal("year"), order],
         [literal("week"), order],
       ],
+      raw: true,
     });
 
-    res.status(200).json(data);
+    const roundedData = roundToTwoDecimals(data);
+
+    res.status(200).json(roundedData);
   } catch (error) {
     res
       .status(500)
@@ -146,45 +197,16 @@ const getMonthlyMonitoringData = async (req, res) => {
         [literal("year"), order],
         [literal("month"), order],
       ],
+      raw: true,
     });
 
-    res.status(200).json(data);
+    const roundedData = roundToTwoDecimals(data);
+
+    res.status(200).json(roundedData);
   } catch (error) {
     res
       .status(500)
       .json({ message: "Error fetching monthly monitoring data", error });
-  }
-};
-
-// Fungsi untuk mengambil data rata-rata harian
-const getDailyMonitoringData = async (req, res) => {
-  try {
-    const order = req.query.order === "desc" ? "DESC" : "ASC";
-
-    const data = await Monitoring.findAll({
-      attributes: [
-        [fn("YEAR", col("timestamp")), "year"],
-        [fn("MONTH", col("timestamp")), "month"],
-        [fn("DAY", col("timestamp")), "day"],
-        [fn("AVG", col("watertemp")), "avg_watertemp"],
-        [fn("AVG", col("waterppm")), "avg_waterppm"],
-        [fn("AVG", col("waterph")), "avg_waterph"],
-        [fn("AVG", col("airtemp")), "avg_airtemp"],
-        [fn("AVG", col("airhum")), "avg_airhum"],
-      ],
-      group: [literal("year"), literal("month"), literal("day")],
-      order: [
-        [literal("year"), order],
-        [literal("month"), order],
-        [literal("day"), order],
-      ],
-    });
-
-    res.status(200).json(data);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching daily monitoring data", error });
   }
 };
 
