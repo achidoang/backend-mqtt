@@ -30,6 +30,18 @@ client.on("connect", () => {
   );
 });
 
+// Interval untuk menyimpan data setiap 10 menit (600000 ms)
+setInterval(saveMonitoringData, 10 * 60 * 1000);
+
+client.on("connect", () => {
+  console.log("Connected to MQTT broker");
+  client.subscribe(["herbalawu/monitoring"], (err) => {
+    if (err) {
+      console.error("Error subscribing to topics:", err);
+    }
+  });
+});
+
 // Fungsi untuk broadcast data ke semua klien WebSocket yang terhubung
 const broadcastWebSocket = (data) => {
   if (wss && wss.clients) {
@@ -157,20 +169,6 @@ client.on("message", async (topic, message) => {
 const initializeWebSocket = (webSocketServer) => {
   wss = webSocketServer;
 };
-
-// Fungsi untuk menyimpan data monitoring ke database setiap 10 menit
-setInterval(async () => {
-  try {
-    if (monitoringDataBuffer) {
-      const monitoringData = new Monitoring(monitoringDataBuffer);
-      await monitoringData.save();
-      console.log("Monitoring data saved:", monitoringData);
-      monitoringDataBuffer = null; // Reset buffer setelah data disimpan
-    }
-  } catch (error) {
-    console.error("Error saving monitoring data to database:", error);
-  }
-}, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
 
 // Fungsi untuk publish ke topik tertentu
 const publishToTopic = (topic, message) => {
