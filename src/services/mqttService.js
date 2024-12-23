@@ -11,22 +11,6 @@ const client = require("../config/mqttClient");
 // Variabel untuk menyimpan data sementara untuk topik herbalawu/monitoring
 let monitoringDataBuffer = null;
 
-// Fungsi untuk menyimpan data monitoring ke database
-const saveMonitoringData = async () => {
-  if (monitoringDataBuffer) {
-    try {
-      const monitoringData = new Monitoring(monitoringDataBuffer);
-      await monitoringData.save();
-      console.log("Buffered monitoring data saved:", monitoringData);
-      monitoringDataBuffer = null; // Reset buffer setelah data disimpan
-    } catch (error) {
-      console.error("Error saving buffered monitoring data:", error.message);
-    }
-  } else {
-    console.log("No monitoring data to save.");
-  }
-};
-
 // Fungsi subscribe untuk setiap topik
 client.on("connect", () => {
   console.log("Connected to MQTT broker");
@@ -41,15 +25,40 @@ client.on("connect", () => {
     (err) => {
       if (err) {
         console.error("Error subscribing to topics:", err);
-      } else {
-        console.log("Subscribed to topics successfully");
       }
     }
   );
-
-  // Interval untuk menyimpan data setiap 10 menit (600000 ms)
-  setInterval(saveMonitoringData, 10 * 60 * 1000);
 });
+
+// Fungsi untuk menginisialisasi WebSocket Server di mqttService
+const initializeWebSocket = (webSocketServer) => {
+  wss = webSocketServer;
+};
+
+// Fungsi untuk menyimpan data monitoring ke database setiap 10 menit
+setInterval(async () => {
+  try {
+    if (monitoringDataBuffer) {
+      const monitoringData = new Monitoring(monitoringDataBuffer);
+      await monitoringData.save();
+      console.log("Monitoring data saved:", monitoringData);
+      monitoringDataBuffer = null; // Reset buffer setelah data disimpan
+    }
+  } catch (error) {
+    console.error("Error saving monitoring data to database:", error);
+  }
+}, 10 * 60 * 1000); // Interval 10 menit untuk topik herbalawu/monitoring
+
+// Fungsi untuk publish ke topik tertentu
+const publishToTopic = (topic, message) => {
+  client.publish(topic, JSON.stringify(message), (err) => {
+    if (err) {
+      console.error("Error publishing to topic:", err);
+    } else {
+      console.log(`Message published to ${topic}`);
+    }
+  });
+};
 
 // Fungsi untuk broadcast data ke semua klien WebSocket yang terhubung
 const broadcastWebSocket = (data) => {
@@ -147,9 +156,12 @@ client.on("message", async (topic, message) => {
         }
       } else if (topic === "herbalawu/monitoring") {
         data.timestamp = data.timestamp || new Date(); // Menggunakan current_timestamp() jika timestamp kosong
+        const monitoringData = new Monitoring(data);
+        await monitoringData.save();
+        console.log("Monitoring data saved:", monitoringData);
+        broadcastWebSocket({ topic, data });
         monitoringDataBuffer = data;
         console.log("Monitoring data buffered:", monitoringDataBuffer);
-        broadcastWebSocket({ topic, data });
       } else if (topic === "herbalawu/state") {
         const aktuatorData = new Aktuator(data);
         await aktuatorData.save();
@@ -170,22 +182,6 @@ client.on("message", async (topic, message) => {
     );
   }
 });
-
-// Fungsi untuk menginisialisasi WebSocket Server di mqttService
-const initializeWebSocket = (webSocketServer) => {
-  wss = webSocketServer;
-};
-
-// Fungsi untuk publish ke topik tertentu
-const publishToTopic = (topic, message) => {
-  client.publish(topic, JSON.stringify(message), (err) => {
-    if (err) {
-      console.error("Error publishing to topic:", err);
-    } else {
-      console.log(`Message published to ${topic}`);
-    }
-  });
-};
 
 module.exports = {
   publishToTopic,
