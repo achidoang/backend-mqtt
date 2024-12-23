@@ -284,6 +284,70 @@ const getMonitoringHistoryPaginated = async (req, res) => {
   }
 };
 
+// Menghapus data berdasarkan tanggal
+const deleteDataByDate = async (req, res) => {
+  const { date } = req.query; // Mengambil tanggal dari query parameter
+
+  if (!date) {
+    return res
+      .status(400)
+      .json({ message: "Tanggal (date) harus disediakan." });
+  }
+
+  try {
+    // Konversi tanggal ke format Date dan pastikan hanya tanggal (tanpa waktu)
+    const targetDate = new Date(date);
+    if (isNaN(targetDate)) {
+      return res.status(400).json({
+        message: "Format tanggal tidak valid. Gunakan format YYYY-MM-DD.",
+      });
+    }
+
+    // Filter berdasarkan tanggal (tanpa memperhatikan waktu)
+    const deletedMonitoring = await Monitoring.destroy({
+      where: {
+        [Op.and]: [
+          fn("DATE", col("timestamp")), // Ekstrak tanggal dari kolom timestamp
+          targetDate.toISOString().split("T")[0], // Ambil hanya tanggal
+        ],
+      },
+    });
+
+    const deletedAktuator = await Aktuator.destroy({
+      where: {
+        [Op.and]: [
+          fn("DATE", col("timestamp")),
+          targetDate.toISOString().split("T")[0],
+        ],
+      },
+    });
+
+    const deletedSetpoint = await Setpoint.destroy({
+      where: {
+        [Op.and]: [
+          fn("DATE", col("timestamp")),
+          targetDate.toISOString().split("T")[0],
+        ],
+      },
+    });
+
+    res.status(200).json({
+      message: "Data berhasil dihapus.",
+      details: {
+        monitoring: deletedMonitoring,
+        aktuator: deletedAktuator,
+        setpoint: deletedSetpoint,
+      },
+    });
+  } catch (error) {
+    console.error("Error in deleteDataByDate:", error);
+    res.status(500).json({
+      message: "Error saat menghapus data berdasarkan tanggal.",
+      error,
+    });
+  }
+};
+
 module.exports = {
   getMonitoringData,
   getMonitoringHistory,
@@ -296,4 +360,5 @@ module.exports = {
   getMonthlyMonitoringData,
   getDailyMonitoringData,
   getMonitoringHistoryPaginated,
+  deleteDataByDate,
 };

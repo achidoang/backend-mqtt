@@ -58,4 +58,11 @@ router.get(
   MqttController.getMonitoringHistoryPaginated
 );
 
+// Endpoint delete data
+router.delete(
+  "/history/monitoring",
+  verifyToken,
+  MqttController.deleteDataByDate
+);
+
 module.exports = router;
