@@ -295,7 +295,7 @@ const deleteDataByDate = async (req, res) => {
   }
 
   try {
-    // Konversi tanggal ke format Date dan pastikan hanya tanggal (tanpa waktu)
+    // Validasi tanggal
     const targetDate = new Date(date);
     if (isNaN(targetDate)) {
       return res.status(400).json({
@@ -303,44 +303,32 @@ const deleteDataByDate = async (req, res) => {
       });
     }
 
-    // Filter berdasarkan tanggal (tanpa memperhatikan waktu)
+    // Format tanggal sebagai string (YYYY-MM-DD)
+    const formattedDate = targetDate.toISOString().split("T")[0];
+
+    // Menghapus data berdasarkan tanggal di Monitoring
     const deletedMonitoring = await Monitoring.destroy({
-      where: {
-        [Op.and]: [
-          fn("DATE", col("timestamp")), // Ekstrak tanggal dari kolom timestamp
-          targetDate.toISOString().split("T")[0], // Ambil hanya tanggal
-        ],
-      },
+      where: literal(`DATE(timestamp) = '${formattedDate}'`),
     });
 
+    // Menghapus data berdasarkan tanggal di Aktuator
     const deletedAktuator = await Aktuator.destroy({
-      where: {
-        [Op.and]: [
-          fn("DATE", col("timestamp")),
-          targetDate.toISOString().split("T")[0],
-        ],
-      },
+      where: literal(`DATE(timestamp) = '${formattedDate}'`),
     });
 
+    // Menghapus data berdasarkan tanggal di Setpoint (opsional)
     const deletedSetpoint = await Setpoint.destroy({
-      where: {
-        [Op.and]: [
-          fn("DATE", col("timestamp")),
-          targetDate.toISOString().split("T")[0],
-        ],
-      },
+      where: literal(`DATE(timestamp) = '${formattedDate}'`),
     });
 
     res.status(200).json({
       message: "Data berhasil dihapus.",
-      details: {
-        monitoring: deletedMonitoring,
-        aktuator: deletedAktuator,
-        setpoint: deletedSetpoint,
-      },
+      deletedMonitoring,
+      deletedAktuator,
+      deletedSetpoint,
     });
   } catch (error) {
-    console.error("Error in deleteDataByDate:", error);
+    console.error("Error saat menghapus data berdasarkan tanggal:", error);
     res.status(500).json({
       message: "Error saat menghapus data berdasarkan tanggal.",
       error,
