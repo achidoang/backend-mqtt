@@ -126,11 +126,12 @@ client.on("message", async (topic, message) => {
         }
       } else if (topic === "herbalawu/monitoring") {
         data.timestamp = data.timestamp || new Date(); // Menggunakan current_timestamp() jika timestamp kosong
-        monitoringDataBuffer = data; // Hanya simpan data ke buffer
-        console.log("Monitoring data buffered:", monitoringDataBuffer);
-
-        // Broadcast ke WebSocket tanpa menyimpan langsung ke database
+        const monitoringData = new Monitoring(data);
+        await monitoringData.save();
+        console.log("Monitoring data saved:", monitoringData);
         broadcastWebSocket({ topic, data });
+        monitoringDataBuffer = data;
+        console.log("Monitoring data buffered:", monitoringDataBuffer);
       } else if (topic === "herbalawu/state") {
         const aktuatorData = new Aktuator(data);
         await aktuatorData.save();
